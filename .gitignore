@@ -1,0 +1,12 @@
+# Xcode
+*.xcodeproj
+xcuserdata/
+DerivedData/
+*.xcuserstate
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# XcodeGen generates the project; keep only project.yml in source control.
