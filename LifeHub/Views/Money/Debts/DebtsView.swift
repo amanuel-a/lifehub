@@ -11,10 +11,21 @@ import SwiftData
 struct DebtsView: View {
     @Environment(\.modelContext) private var modelContext
 
+    @Environment(\.currencyCode) private var appCurrency
+
     @Query(sort: \Debt.createdAt, order: .reverse) private var debts: [Debt]
 
     @State private var showingForm = false
     @State private var showSettled = false
+
+    /// Sums debts into per-currency buckets — amounts stay as entered.
+    private func totals(_ list: [Debt]) -> [String: Decimal] {
+        var buckets: [String: Decimal] = [:]
+        for debt in list {
+            buckets[debt.currencyCode ?? appCurrency, default: .zero] += debt.remaining
+        }
+        return buckets
+    }
 
     private var openDebts: [Debt] {
         debts.filter { !$0.isSettled && $0.remaining > 0 }
@@ -32,12 +43,12 @@ struct DebtsView: View {
         debts.filter { $0.isSettled || $0.remaining == 0 }
     }
 
-    private var totalIOwe: Decimal {
-        iOweDebts.reduce(Decimal.zero) { $0 + $1.remaining }
+    private var iOweDisplay: StatsService.TotalDisplay {
+        StatsService.display(of: totals(iOweDebts), appCurrency: appCurrency)
     }
 
-    private var totalOwedToMe: Decimal {
-        owedToMeDebts.reduce(Decimal.zero) { $0 + $1.remaining }
+    private var owedToMeDisplay: StatsService.TotalDisplay {
+        StatsService.display(of: totals(owedToMeDebts), appCurrency: appCurrency)
     }
 
     private var dueSoon: [Debt] {
@@ -50,8 +61,10 @@ struct DebtsView: View {
         List {
             Section {
                 HStack(spacing: 10) {
-                    StatCard(titleKey: "I Owe", amount: totalIOwe, symbolName: "arrow.up.right.circle.fill", tint: .pink)
-                    StatCard(titleKey: "Owed to Me", amount: totalOwedToMe, symbolName: "arrow.down.left.circle.fill", tint: .teal)
+                    StatCard(titleKey: "I Owe", amount: iOweDisplay.amount, symbolName: "arrow.up.right.circle.fill", tint: .pink, extraText: iOweDisplay.extra)
+                        .environment(\.currencyCode, iOweDisplay.code)
+                    StatCard(titleKey: "Owed to Me", amount: owedToMeDisplay.amount, symbolName: "arrow.down.left.circle.fill", tint: .teal, extraText: owedToMeDisplay.extra)
+                        .environment(\.currencyCode, owedToMeDisplay.code)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 .listRowBackground(Color.clear)
@@ -136,6 +149,7 @@ struct DebtsView: View {
 
 /// One debt row: person, direction, remaining balance, due date.
 struct DebtRow: View {
+    @Environment(\.currencyCode) private var appCurrency
     let debt: Debt
 
     var body: some View {
@@ -158,6 +172,7 @@ struct DebtRow: View {
                 AmountText(amount: debt.isSettled ? debt.originalAmount : debt.remaining, compact: true)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(debt.isSettled ? .secondary : .primary)
+                    .environment(\.currencyCode, debt.currencyCode ?? appCurrency)
                 if let due = debt.dueDate, !debt.isSettled {
                     Text(due.relativeDayDescription)
                         .font(.caption)

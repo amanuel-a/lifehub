@@ -25,6 +25,7 @@ enum ModelContainerFactory {
         TaskItem.self,
         TaskGroup.self,
         Note.self,
+        Project.self,
         AppSettings.self
     ])
 

@@ -11,6 +11,7 @@ import SwiftData
 struct DebtDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.currencyCode) private var appCurrency
 
     @Bindable var debt: Debt
 
@@ -111,6 +112,7 @@ struct DebtDetailView: View {
                 }
             }
         }
+        .environment(\.currencyCode, debt.currencyCode ?? appCurrency)
         .navigationTitle(debt.person)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

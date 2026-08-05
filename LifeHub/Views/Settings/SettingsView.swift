@@ -23,13 +23,21 @@ struct SettingsView: View {
     @State private var pendingRestoreData: Data?
     @State private var feedback: String?
 
-    private let currencyOptions = ["ETB", "USD", "EUR", "GBP", "KES", "AED", "SAR", "CNY", "INR"]
+    /// Every ISO currency, sorted by localized display name.
+    private static let currencyOptions: [String] = Locale.commonISOCurrencyCodes.sorted { lhs, rhs in
+        currencyDisplayName(lhs).localizedCaseInsensitiveCompare(currencyDisplayName(rhs)) == .orderedAscending
+    }
+
+    private static func currencyDisplayName(_ code: String) -> String {
+        Locale.current.localizedString(forCurrencyCode: code) ?? code
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 if let settings = settingsList.first {
                     generalSection(settings)
+                    calendarSyncSection(settings)
                     remindersSection(settings)
                     securitySection(settings)
                 }
@@ -97,10 +105,11 @@ struct SettingsView: View {
                 get: { settings.currencyCode },
                 set: { settings.currencyCode = $0 }
             )) {
-                ForEach(currencyOptions, id: \.self) { code in
-                    Text(code).tag(code)
+                ForEach(Self.currencyOptions, id: \.self) { code in
+                    Text(verbatim: "\(Self.currencyDisplayName(code)) (\(code))").tag(code)
                 }
             }
+            .pickerStyle(.navigationLink)
             Picker("Language", selection: Binding(
                 get: { settings.languageCode },
                 set: { settings.languageCode = $0 }
@@ -109,6 +118,37 @@ struct SettingsView: View {
                 Text(verbatim: "English").tag("en")
                 Text(verbatim: "አማርኛ").tag("am")
             }
+        }
+    }
+
+    private func calendarSyncSection(_ settings: AppSettings) -> some View {
+        Section {
+            Toggle(isOn: Binding(
+                get: { settings.syncDeviceCalendars },
+                set: { newValue in
+                    if newValue {
+                        Task {
+                            let granted = await CalendarSyncService.shared.requestAccess()
+                            settings.syncDeviceCalendars = granted
+                            try? modelContext.save()
+                            if !granted {
+                                feedback = String(localized: "Calendar access was denied. You can enable it in iOS Settings → Privacy & Security → Calendars.")
+                            } else {
+                                Haptics.shared.success()
+                            }
+                        }
+                    } else {
+                        settings.syncDeviceCalendars = false
+                        try? modelContext.save()
+                    }
+                }
+            )) {
+                Label("Sync device & Google calendars", systemImage: "calendar.badge.clock")
+            }
+        } header: {
+            Text("Calendar Sync")
+        } footer: {
+            Text("Shows meetings from every calendar on this device. To include Google, add your account in iOS Settings → Calendar → Accounts — its events then appear here automatically. LifeHub only reads them; your calendars are never changed.")
         }
     }
 

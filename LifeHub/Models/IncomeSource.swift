@@ -24,6 +24,10 @@ final class IncomeSource {
     /// Monthly: the day of the month pay arrives (1...31, clamped to month length).
     var paydayDayOfMonth: Int?
 
+    /// Currency for this source's amounts, overriding the app default.
+    /// Nil means "use the app's currency".
+    var currencyCode: String?
+
     /// The date the owner started at this company / client.
     var startDate: Date?
     /// Set when the owner leaves; a nil end date means this is a current source.
@@ -46,6 +50,7 @@ final class IncomeSource {
         paydayWeekday: Int? = nil,
         biweeklyAnchor: Date? = nil,
         paydayDayOfMonth: Int? = nil,
+        currencyCode: String? = nil,
         startDate: Date? = nil,
         endDate: Date? = nil,
         note: String = ""
@@ -58,6 +63,7 @@ final class IncomeSource {
         self.paydayWeekday = paydayWeekday
         self.biweeklyAnchor = biweeklyAnchor
         self.paydayDayOfMonth = paydayDayOfMonth
+        self.currencyCode = currencyCode
         self.startDate = startDate
         self.endDate = endDate
         self.note = note
@@ -135,6 +141,20 @@ final class IncomeSource {
     var tenureDescription: String? {
         guard let startDate else { return nil }
         return TenureFormatter.string(from: startDate, to: endDate ?? .now)
+    }
+
+    /// Which day of the job the owner is on right now (day 1 = the start date),
+    /// counting up automatically. Uses the end date for past jobs. Nil when no
+    /// start date is set.
+    var dayNumber: Int? {
+        guard let startDate else { return nil }
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: startDate),
+            to: calendar.startOfDay(for: endDate ?? .now)
+        ).day ?? 0
+        return max(days + 1, 1)
     }
 
     /// The next yearly work anniversary (for the "2 years at Kayo!" reminder).

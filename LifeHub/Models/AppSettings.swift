@@ -30,6 +30,9 @@ final class AppSettings {
     var monthlyReviewEnabled: Bool
     /// Celebrate work anniversaries.
     var anniversaryRemindersEnabled: Bool
+    /// Pull meetings/events from the device's calendars (incl. Google accounts
+    /// added in iOS Settings) into the app's calendar and agenda.
+    var syncDeviceCalendars: Bool = false
 
     init() {
         self.key = "app-settings"
@@ -44,6 +47,7 @@ final class AppSettings {
         self.languageCode = "system"
         self.monthlyReviewEnabled = true
         self.anniversaryRemindersEnabled = true
+        self.syncDeviceCalendars = false
     }
 
     /// Fetches the singleton, creating and seeding defaults on first launch.

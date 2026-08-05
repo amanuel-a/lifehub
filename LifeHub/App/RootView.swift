@@ -66,6 +66,12 @@ struct RootView: View {
                 Label("Money", systemImage: "banknote.fill")
             }
 
+            Tab(value: AppTab.projects) {
+                ProjectsView()
+            } label: {
+                Label("Projects", systemImage: "square.stack.3d.up.fill")
+            }
+
             Tab(value: AppTab.calendar) {
                 CalendarScreen()
             } label: {

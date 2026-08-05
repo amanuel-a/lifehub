@@ -11,22 +11,40 @@ struct StatCard: View {
     let amount: Decimal
     let symbolName: String
     let tint: Color
+    /// Extra line under the amount, e.g. "+ 100 USD" for a second currency.
+    var extraText: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(titleKey, systemImage: symbolName)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(tint)
-                .labelStyle(.titleAndIcon)
-            AmountText(amount: amount, compact: true)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.primary)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: symbolName)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(tint.gradient, in: .circle)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(titleKey)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                AmountText(amount: amount, compact: true)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.primary)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                if let extraText {
+                    Text(extraText)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.fill.tertiary, in: .rect(cornerRadius: 14))
+        .padding(14)
+        .background(.fill.tertiary, in: .rect(cornerRadius: 18))
         .accessibilityElement(children: .combine)
     }
 }

@@ -96,7 +96,7 @@ struct PaydayWidgetView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Text(MoneyFormat.compactString(payday.amount, code: code))
+                Text(MoneyFormat.compactString(payday.amount, code: payday.currencyCode ?? code))
                     .font(.caption.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(.green)

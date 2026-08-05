@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// A native-feeling month grid with type-colored dots and swipe-free
-/// month navigation via chevrons.
+/// A clean, native-feeling month grid in a card: type-colored event dots, a
+/// ring on today, a filled accent selection, and chevron month navigation.
 struct MonthGridView: View {
     @Binding var selectedDay: Date
     let items: [AgendaItem]
@@ -36,14 +36,15 @@ struct MonthGridView: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             header
 
             HStack {
                 ForEach(weekdayHeaders.indices, id: \.self) { index in
                     Text(weekdayHeaders[index])
-                        .font(.caption2.weight(.medium))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -53,13 +54,13 @@ struct MonthGridView: View {
                     if let day = cells[index] {
                         dayCell(day)
                     } else {
-                        Color.clear.frame(height: 44)
+                        Color.clear.frame(height: 46)
                     }
                 }
             }
         }
-        .padding(.horizontal)
-        .padding(.bottom, 4)
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
     }
 
     private var header: some View {
@@ -67,39 +68,53 @@ struct MonthGridView: View {
             Button {
                 shiftMonth(-1)
             } label: {
-                Image(systemName: "chevron.left")
+                chevron("chevron.left")
             }
             .accessibilityLabel(Text("Previous month"))
             Spacer()
             Text(monthStart, format: .dateTime.month(.wide).year())
-                .font(.headline)
+                .font(.title3.weight(.bold))
                 .contentTransition(.numericText())
             Spacer()
             Button {
                 shiftMonth(1)
             } label: {
-                Image(systemName: "chevron.right")
+                chevron("chevron.right")
             }
             .accessibilityLabel(Text("Next month"))
         }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 4)
+        .buttonStyle(.plain)
+    }
+
+    private func chevron(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.subheadline.weight(.bold))
+            .foregroundStyle(Color.accentColor)
+            .frame(width: 34, height: 34)
+            .background(Color.accentColor.opacity(0.12), in: .circle)
     }
 
     private func dayCell(_ day: Date) -> some View {
         let isSelected = calendar.isDate(day, inSameDayAs: selectedDay)
+        let isToday = day.isToday
         return Button {
             withAnimation(.spring(duration: 0.25)) { selectedDay = day }
         } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 4) {
                 Text(day, format: .dateTime.day())
-                    .font(.callout.weight(isSelected ? .bold : .regular))
-                    .foregroundStyle(isSelected ? Color.white : (day.isToday ? Color.accentColor : .primary))
-                    .frame(width: 32, height: 32)
-                    .background(isSelected ? Color.accentColor : Color.clear, in: .circle)
+                    .font(.callout.weight(isSelected || isToday ? .bold : .regular))
+                    .foregroundStyle(isSelected ? Color.white : (isToday ? Color.accentColor : .primary))
+                    .frame(width: 34, height: 34)
+                    .background {
+                        if isSelected {
+                            Circle().fill(Color.accentColor)
+                        } else if isToday {
+                            Circle().strokeBorder(Color.accentColor.opacity(0.5), lineWidth: 1.5)
+                        }
+                    }
                 DayDots(items: items, day: day)
             }
-            .frame(height: 44)
+            .frame(height: 46)
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
         }

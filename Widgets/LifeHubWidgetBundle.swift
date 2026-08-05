@@ -10,6 +10,9 @@ import SwiftUI
 struct LifeHubWidgetBundle: WidgetBundle {
     var body: some Widget {
         TodayWidget()
+        TasksWidget()
+        NotesWidget()
+        ProjectsWidget()
         MoneyWidget()
         PaydayWidget()
         CountdownLiveActivity()
@@ -53,6 +56,9 @@ extension WidgetSnapshot {
         snapshot.monthExpenses = 21_500
         snapshot.totalIOwe = 5_000
         snapshot.totalOwedToMe = 2_000
+        snapshot.monthIncomeByCurrency = ["USD": 48_000]
+        snapshot.iOweByCurrency = ["USD": 5_000]
+        snapshot.owedToMeByCurrency = ["USD": 2_000]
         snapshot.nextPayday = .init(sourceName: "Kayo", amount: 40_000, date: .now.addingTimeInterval(3 * 86_400))
         snapshot.nextRent = .init(title: "Rent", amount: 9_000, date: .now.addingTimeInterval(6 * 86_400))
         snapshot.todayLines = [
@@ -61,6 +67,22 @@ extension WidgetSnapshot {
             .init(title: "Pay electricity", time: nil, symbolName: "doc.text.fill")
         ]
         snapshot.openTaskCount = 4
+        snapshot.openTasks = [
+            .init(id: "1", title: "Finish widget design", due: .now, overdue: false),
+            .init(id: "2", title: "Pay electricity bill", due: .now.addingTimeInterval(-86_400), overdue: true),
+            .init(id: "3", title: "Call the landlord", due: .now.addingTimeInterval(2 * 86_400), overdue: false),
+            .init(id: "4", title: "Buy groceries", due: nil, overdue: false)
+        ]
+        snapshot.recentNotes = [
+            .init(id: "1", title: "Project ideas", snippet: "A budgeting app for freelancers…", pinned: true),
+            .init(id: "2", title: "Groceries", snippet: "Milk, eggs, coffee", pinned: false),
+            .init(id: "3", title: "Meeting notes", snippet: "Ship v1 by Friday", pinned: false)
+        ]
+        snapshot.projects = [
+            .init(id: "1", name: "LifeHub", status: "Active", progress: 0.6),
+            .init(id: "2", name: "Side Store", status: "Planning", progress: 0.2)
+        ]
+        snapshot.activeProjectCount = 2
         return snapshot
     }
 }

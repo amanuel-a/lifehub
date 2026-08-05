@@ -12,4 +12,8 @@ enum AppGroup {
     static var defaults: UserDefaults {
         UserDefaults(suiteName: identifier) ?? .standard
     }
+
+    /// Task UUIDs completed from an interactive widget, applied by the app on
+    /// its next launch / foreground.
+    static let pendingCompletedTasksKey = "pending-completed-task-ids"
 }

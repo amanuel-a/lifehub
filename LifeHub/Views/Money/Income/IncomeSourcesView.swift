@@ -74,6 +74,7 @@ struct IncomeSourcesView: View {
 
 /// One income source row: name, schedule, next payday countdown, amount.
 struct IncomeSourceRow: View {
+    @Environment(\.currencyCode) private var appCurrency
     let source: IncomeSource
 
     var body: some View {
@@ -99,6 +100,7 @@ struct IncomeSourceRow: View {
             VStack(alignment: .trailing, spacing: 2) {
                 AmountText(amount: source.amount, compact: true)
                     .font(.subheadline.weight(.semibold))
+                    .environment(\.currencyCode, source.currencyCode ?? appCurrency)
                 if let next = source.nextPayday() {
                     Text(next.relativeDayDescription)
                         .font(.caption)

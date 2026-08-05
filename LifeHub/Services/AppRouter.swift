@@ -10,6 +10,7 @@ import Observation
 enum AppTab: String, CaseIterable, Identifiable {
     case dashboard
     case money
+    case projects
     case calendar
     case tasks
     case notes

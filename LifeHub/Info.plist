@@ -27,6 +27,8 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>LifeHub syncs your meetings and events from your device and Google calendars so they appear alongside your reminders.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>LifeHub uses Face ID to unlock your private data quickly instead of typing your PIN.</string>
 	<key>NSSupportsLiveActivities</key>

@@ -28,6 +28,7 @@ struct IncomeSourceDetailView: View {
             salaryHistorySection
             receivedSection
         }
+        .environment(\.currencyCode, source.currencyCode ?? currencyCode)
         .navigationTitle(source.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -163,6 +164,17 @@ struct IncomeSourceDetailView: View {
             } else {
                 Text("Set a pay schedule to see the next payday.")
                     .foregroundStyle(.secondary)
+            }
+
+            if source.nextPayday() != nil {
+                Label {
+                    Text("You'll get a reminder on payday to confirm the money arrived.")
+                } icon: {
+                    Image(systemName: "bell.badge.fill")
+                        .foregroundStyle(.green)
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             }
         }
     }

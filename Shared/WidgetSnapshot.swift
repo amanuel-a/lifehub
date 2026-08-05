@@ -14,6 +14,8 @@ struct WidgetSnapshot: Codable, Sendable {
         var sourceName: String
         var amount: Decimal
         var date: Date
+        /// The source's own currency; nil falls back to the app currency.
+        var currencyCode: String?
     }
 
     struct DueInfo: Codable, Sendable {
@@ -28,6 +30,27 @@ struct WidgetSnapshot: Codable, Sendable {
         var symbolName: String
     }
 
+    struct TaskLine: Codable, Sendable, Identifiable {
+        var id: String
+        var title: String
+        var due: Date?
+        var overdue: Bool
+    }
+
+    struct NoteLine: Codable, Sendable, Identifiable {
+        var id: String
+        var title: String
+        var snippet: String
+        var pinned: Bool
+    }
+
+    struct ProjectLine: Codable, Sendable, Identifiable {
+        var id: String
+        var name: String
+        var status: String
+        var progress: Double
+    }
+
     var generatedAt: Date = .now
     var currencyCode: String = "USD"
 
@@ -36,6 +59,12 @@ struct WidgetSnapshot: Codable, Sendable {
     var monthExpenses: Decimal = 0
     var totalIOwe: Decimal = 0
     var totalOwedToMe: Decimal = 0
+
+    // Per-currency buckets (amounts as entered, never converted) so widgets
+    // show exactly what the app's cards show.
+    var monthIncomeByCurrency: [String: Decimal] = [:]
+    var iOweByCurrency: [String: Decimal] = [:]
+    var owedToMeByCurrency: [String: Decimal] = [:]
 
     // Upcoming
     var nextPayday: PaydayInfo?
@@ -46,6 +75,12 @@ struct WidgetSnapshot: Codable, Sendable {
     // Today
     var todayLines: [AgendaLine] = []
     var openTaskCount: Int = 0
+
+    // Lists for the dedicated widgets
+    var openTasks: [TaskLine] = []
+    var recentNotes: [NoteLine] = []
+    var projects: [ProjectLine] = []
+    var activeProjectCount: Int = 0
 
     var monthSavings: Decimal { monthIncome - monthExpenses }
 }

@@ -153,7 +153,7 @@ enum NotificationScheduler {
                 results.append(Candidate(
                     fireDate: at(hour: settings.reminderHour, on: payday, calendar: calendar),
                     title: String(localized: "Payday — \(source.name)"),
-                    body: String(localized: "\(MoneyFormat.string(source.amount, code: settings.currencyCode)) expected today. Did the money arrive?"),
+                    body: String(localized: "\(MoneyFormat.string(source.amount, code: source.currencyCode ?? settings.currencyCode)) expected today. Did the money arrive?"),
                     category: .payday,
                     recordUUID: source.uuid,
                     occurrenceDate: payday
@@ -206,7 +206,7 @@ enum NotificationScheduler {
         var results: [Candidate] = []
         for debt in debts {
             guard let due = debt.dueDate, debt.remaining > 0 else { continue }
-            let amountText = MoneyFormat.string(debt.remaining, code: settings.currencyCode)
+            let amountText = MoneyFormat.string(debt.remaining, code: debt.currencyCode ?? settings.currencyCode)
             let title = debt.direction == .iOwe
                 ? String(localized: "Debt to \(debt.person)")
                 : String(localized: "\(debt.person) owes you")

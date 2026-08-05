@@ -77,6 +77,26 @@ enum BillFrequency: String, Codable, CaseIterable, Identifiable, Sendable {
         case .yearly: "Yearly"
         }
     }
+
+    /// Calendar components to add to advance from one billing period to the next.
+    var dateComponents: DateComponents {
+        switch self {
+        case .weekly: DateComponents(day: 7)
+        case .monthly: DateComponents(month: 1)
+        case .quarterly: DateComponents(month: 3)
+        case .yearly: DateComponents(year: 1)
+        }
+    }
+
+    /// Noun for one billing period, used in "3 months" style labels.
+    var periodNoun: String {
+        switch self {
+        case .weekly: String(localized: "weeks")
+        case .monthly: String(localized: "months")
+        case .quarterly: String(localized: "quarters")
+        case .yearly: String(localized: "years")
+        }
+    }
 }
 
 /// How often a loan installment is due.

@@ -19,6 +19,8 @@ final class Debt {
     var dueDate: Date?
     var note: String
     var isSettled: Bool
+    /// Currency for this debt, overriding the app default. Nil = app currency.
+    var currencyCode: String?
     var createdAt: Date
 
     @Relationship(deleteRule: .cascade, inverse: \DebtPayment.debt)
@@ -30,7 +32,8 @@ final class Debt {
         amount: Decimal,
         date: Date = .now,
         dueDate: Date? = nil,
-        note: String = ""
+        note: String = "",
+        currencyCode: String? = nil
     ) {
         self.uuid = UUID()
         self.person = person
@@ -40,6 +43,7 @@ final class Debt {
         self.dueDate = dueDate
         self.note = note
         self.isSettled = false
+        self.currencyCode = currencyCode
         self.createdAt = .now
     }
 

@@ -28,6 +28,8 @@ struct CategoryTotal: Identifiable, Hashable {
 struct MonthlySummary {
     var month: Date
     var income: Decimal = 0
+    /// Income grouped by currency code, amounts exactly as entered.
+    var incomeByCurrency: [String: Decimal] = [:]
     var expenses: Decimal = 0
     var categoryTotals: [CategoryTotal] = []
     var biggestExpenses: [ExpenseSnapshot] = []
@@ -59,12 +61,19 @@ enum StatsService {
         let start = interval.start
         let end = interval.end
 
-        // Income received this month
+        // Income received this month, kept in each entry's own currency —
+        // never converted. `income` carries the app-currency bucket; other
+        // currencies ride along in `incomeByCurrency`.
+        let settings = AppSettings.fetchOrCreate(in: context)
         let incomeDescriptor = FetchDescriptor<IncomeEntry>(
             predicate: #Predicate { $0.dateReceived >= start && $0.dateReceived <= end }
         )
         let entries = (try? context.fetch(incomeDescriptor)) ?? []
-        summary.income = entries.reduce(Decimal.zero) { $0 + $1.amount }
+        for entry in entries {
+            let code = entry.source?.currencyCode ?? settings.currencyCode
+            summary.incomeByCurrency[code, default: .zero] += entry.amount
+        }
+        summary.income = summary.incomeByCurrency[settings.currencyCode] ?? 0
 
         // Expenses this month
         let expenseDescriptor = FetchDescriptor<Expense>(
@@ -133,21 +142,36 @@ enum StatsService {
     }
 
     /// Debt totals for the overview: "How much do I owe? How much is owed to me?"
-    static func debtTotals(context: ModelContext) -> (iOwe: Decimal, owedToMe: Decimal) {
+    /// Amounts stay in each debt's own currency — never converted — grouped
+    /// into per-currency buckets ("ETB": 12,500, "USD": 100).
+    static func debtTotals(context: ModelContext) -> (iOwe: [String: Decimal], owedToMe: [String: Decimal]) {
+        let settings = AppSettings.fetchOrCreate(in: context)
         let descriptor = FetchDescriptor<Debt>(predicate: #Predicate { !$0.isSettled })
         let debts = (try? context.fetch(descriptor)) ?? []
-        var iOwe = Decimal.zero
-        var owedToMe = Decimal.zero
+        var iOwe: [String: Decimal] = [:]
+        var owedToMe: [String: Decimal] = [:]
         for debt in debts {
+            let code = debt.currencyCode ?? settings.currencyCode
             switch debt.direction {
-            case .iOwe: iOwe += debt.remaining
-            case .owedToMe: owedToMe += debt.remaining
+            case .iOwe: iOwe[code, default: .zero] += debt.remaining
+            case .owedToMe: owedToMe[code, default: .zero] += debt.remaining
             }
         }
-        // Open loans count toward what the owner owes.
+        // Open loans count toward what the owner owes (app currency).
         let loanDescriptor = FetchDescriptor<Loan>(predicate: #Predicate { !$0.isClosed })
         let loans = (try? context.fetch(loanDescriptor)) ?? []
-        iOwe += loans.reduce(Decimal.zero) { $0 + $1.remainingBalance }
+        let loanSum = loans.reduce(Decimal.zero) { $0 + $1.remainingBalance }
+        if loanSum > 0 {
+            iOwe[settings.currencyCode, default: .zero] += loanSum
+        }
         return (iOwe, owedToMe)
+    }
+
+    /// Shared per-currency display logic (also used by the widgets, so the
+    /// app cards and Home Screen always match).
+    typealias TotalDisplay = MoneyFormat.TotalDisplay
+
+    static func display(of totals: [String: Decimal], appCurrency: String) -> TotalDisplay {
+        MoneyFormat.display(of: totals, appCurrency: appCurrency)
     }
 }

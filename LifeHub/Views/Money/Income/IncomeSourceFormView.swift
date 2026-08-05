@@ -14,10 +14,18 @@ struct IncomeSourceFormView: View {
 
     var source: IncomeSource?
 
+    @Environment(\.currencyCode) private var appCurrency
+
     @State private var name = ""
     @State private var type: IncomeType = .salary
     @State private var amountText = ""
+    /// Either "USD" or "ETB" — toggled by tapping the code next to the amount.
+    @State private var currency = "ETB"
     @State private var frequency: PayFrequency = .monthly
+
+    private func supported(_ code: String) -> String {
+        (code == "USD" || code == "ETB") ? code : "ETB"
+    }
     @State private var paydayWeekday = 6 // Friday
     @State private var paydayDayOfMonth = 28
     @State private var biweeklyAnchor = Date.now
@@ -52,7 +60,7 @@ struct IncomeSourceFormView: View {
                 }
 
                 Section {
-                    CurrencyField(titleKey: "Amount", text: $amountText)
+                    CurrencyField(titleKey: "Amount", text: $amountText, toggleableCurrency: $currency)
                     Picker("Frequency", selection: $frequency) {
                         ForEach(PayFrequency.allCases) { frequency in
                             Text(frequency.titleKey).tag(frequency)
@@ -111,10 +119,14 @@ struct IncomeSourceFormView: View {
     }
 
     private func populate() {
-        guard let source else { return }
+        guard let source else {
+            currency = supported(appCurrency)
+            return
+        }
         name = source.name
         type = source.type
         amountText = "\(source.amount)"
+        currency = supported(source.currencyCode ?? appCurrency)
         frequency = source.frequency
         paydayWeekday = source.paydayWeekday ?? 6
         paydayDayOfMonth = source.paydayDayOfMonth ?? 28
@@ -143,6 +155,7 @@ struct IncomeSourceFormView: View {
         target.name = name.trimmingCharacters(in: .whitespaces)
         target.type = type
         target.amount = amount
+        target.currencyCode = currency
         target.frequency = frequency
         target.paydayWeekday = frequency == .monthly ? nil : paydayWeekday
         target.paydayDayOfMonth = frequency == .monthly ? paydayDayOfMonth : nil

@@ -13,13 +13,21 @@ struct DebtFormView: View {
 
     var debt: Debt?
 
+    @Environment(\.currencyCode) private var appCurrency
+
     @State private var person = ""
     @State private var direction: DebtDirection = .iOwe
     @State private var amountText = ""
+    /// Either "USD" or "ETB" — toggled by tapping the code next to the amount.
+    @State private var currency = "ETB"
     @State private var date = Date.now
     @State private var hasDueDate = false
     @State private var dueDate = Date.now.addingTimeInterval(7 * 86_400)
     @State private var note = ""
+
+    private func supported(_ code: String) -> String {
+        (code == "USD" || code == "ETB") ? code : "ETB"
+    }
 
     private var isEditing: Bool { debt != nil }
     private var amount: Decimal? { Decimal.fromUserInput(amountText) }
@@ -40,7 +48,7 @@ struct DebtFormView: View {
                     .pickerStyle(.segmented)
                     TextField("Person", text: $person)
                         .textInputAutocapitalization(.words)
-                    CurrencyField(titleKey: "Amount", text: $amountText)
+                    CurrencyField(titleKey: "Amount", text: $amountText, toggleableCurrency: $currency)
                 }
 
                 Section("Dates") {
@@ -76,10 +84,14 @@ struct DebtFormView: View {
     }
 
     private func populate() {
-        guard let debt else { return }
+        guard let debt else {
+            currency = supported(appCurrency)
+            return
+        }
         person = debt.person
         direction = debt.direction
         amountText = "\(debt.originalAmount)"
+        currency = supported(debt.currencyCode ?? appCurrency)
         date = debt.date
         hasDueDate = debt.dueDate != nil
         dueDate = debt.dueDate ?? dueDate
@@ -97,6 +109,7 @@ struct DebtFormView: View {
         target.person = person.trimmingCharacters(in: .whitespaces)
         target.direction = direction
         target.originalAmount = amount
+        target.currencyCode = currency
         target.date = date
         target.dueDate = hasDueDate ? dueDate : nil
         target.note = note
